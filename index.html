@@ -40,13 +40,11 @@
   .result-box .label { font-size: 11px; color: #AAA; margin-bottom: 4px; letter-spacing: 1px; }
   .result-box p { font-size: 14px; color: #333; line-height: 1.7; }
   .ai-box { padding: 16px; background: #F0F7F3; border-radius: 12px; margin-bottom: 14px; border-left: 3px solid #7C9E8A; }
-  .ai-box .ai-label { font-size: 11px; color: #7C9E8A; font-weight: 700; letter-spacing: 1px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-  .ai-box .ai-content { font-size: 14px; color: #333; line-height: 1.85; white-space: pre-wrap; }
-  .ai-loading { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #7C9E8A; }
-  .dot { width: 6px; height: 6px; border-radius: 50%; background: #7C9E8A; animation: bounce 1.2s infinite; }
-  .dot:nth-child(2) { animation-delay: 0.2s; }
-  .dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes bounce { 0%,80%,100% { transform: scale(0.6); opacity:0.4; } 40% { transform: scale(1); opacity:1; } }
+  .ai-box .ai-label { font-size: 11px; color: #7C9E8A; font-weight: 700; letter-spacing: 1px; margin-bottom: 10px; }
+  .ai-section { margin-bottom: 12px; }
+  .ai-section:last-child { margin-bottom: 0; }
+  .ai-section-title { font-size: 12px; color: #7C9E8A; font-weight: 700; margin-bottom: 5px; }
+  .ai-section-content { font-size: 14px; color: #333; line-height: 1.8; }
   .result-line { margin-top: 4px; padding: 16px; background: #F0F7F3; border-radius: 12px; text-align: center; }
   .result-line .t1 { font-size: 13px; color: #4A9068; font-weight: 600; margin-bottom: 4px; }
   .result-line .t2 { font-size: 13px; color: #666; margin-top: 4px; }
@@ -97,13 +95,8 @@
       <p id="result-suggest"></p>
     </div>
     <div class="ai-box" id="ai-box">
-      <div class="ai-label">🌿 AI 專屬建議</div>
-      <div class="ai-content" id="ai-content">
-        <div class="ai-loading">
-          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-          <span>正在為你分析身體狀態...</span>
-        </div>
-      </div>
+      <div class="ai-label">🌿 專屬建議</div>
+      <div id="ai-content"></div>
     </div>
     <div class="result-line">
       <div class="t1" id="result-name-line">想了解更多或預約調整</div>
@@ -167,6 +160,55 @@ const sections = [
   },
 ];
 
+// 各區塊的放鬆建議資料庫
+const areaAdvice = {
+  neck: {
+    analysis: "頸肩的緊繃通常來自長時間低頭、螢幕使用，或是身體為了保護不穩定的頸椎結構而主動收縮。你的肩膀可能長期在「撐著」某個姿勢，這種保護性張力會讓肌肉很難靠休息放鬆。",
+    stretches: [
+      "【耳朵貼肩】坐直，將右耳慢慢靠向右肩，感覺左側頸部拉開，維持 20 秒再換邊。不要聳肩，讓重力自然帶動就好。",
+      "【轉頭畫圓】頭部緩慢轉向右邊到底，停 3 秒，再慢慢轉回正面，換左邊。每天早晚各 5 次，不要快。",
+      "【肩胛骨夾緊】坐正，雙手自然垂下，把兩側肩胛骨向中間夾緊，維持 5 秒再放鬆，重複 10 次，幫助肩膀回到正確位置。"
+    ],
+    caution: "如果轉頭時伴隨頭暈、或手臂有麻感，這不只是肌肉緊繃，建議盡快找我聊聊。"
+  },
+  back: {
+    analysis: "腰背的問題很多時候不是腰本身的問題，而是骨盆、髖關節或胸椎的活動度不足，讓腰椎長期代償。你的腰可能一直在「幫別的地方做事」，才會這麼累。",
+    stretches: [
+      "【貓牛式】四足跪姿，吸氣時肚子下沉、抬頭，吐氣時拱背、低頭，緩慢做 10 次，喚醒脊椎的活動度。",
+      "【坐姿前彎】坐在椅子邊緣，雙腳與肩同寬，身體緩慢向前趴，讓背部自然下沉，維持 30 秒。不要強迫，讓身體慢慢放開。",
+      "【躺姿抱膝】平躺，雙手環抱雙膝靠向胸口，輕輕左右搖晃，維持 30 秒。這個動作幫助腰椎減壓。"
+    ],
+    caution: "如果腰痛延伸到臀部或大腿，或是腳有麻感，代表神經可能已受影響，需要盡快處理。"
+  },
+  arm: {
+    analysis: "手麻或手臂無力通常是頸椎或胸廓出口的問題，不是手本身。神經或血管在某個地方被壓迫，才會讓手有這些感覺。這種情況靠按摩手臂效果很有限，需要找到源頭。",
+    stretches: [
+      "【胸廓伸展】站立，右手扶門框，身體慢慢向左轉，感覺右側胸口和手臂前側拉開，維持 20 秒再換邊。",
+      "【手腕轉圈】雙手握拳，緩慢做手腕繞圈，順時針 10 圈、逆時針 10 圈，放鬆前臂張力。",
+      "【聳肩放鬆】雙肩同時向上聳到最高，維持 3 秒，然後快速放下。重複 10 次，幫助肩頸神經通道減壓。"
+    ],
+    caution: "如果麻感持續超過幾分鐘、或特定姿勢會加重，請盡快來讓我評估，這類問題拖越久越難處理。"
+  },
+  sleep: {
+    analysis: "睡眠品質差或醒來依然疲勞，很多時候是身體的保護張力太高，讓神經系統在睡眠中也無法真正放鬆。身體覺得「不安全」，就不會讓你進入深層休息。",
+    stretches: [
+      "【睡前腹式呼吸】躺平，一手放胸口、一手放肚子，吸氣讓肚子鼓起，吐氣讓肚子下沉。做 10 次，幫助神經系統切換到放鬆模式。",
+      "【睡前腿部抬高】躺平，雙腿靠牆往上伸直，維持 5 分鐘。促進下肢血液回流，減少睡眠中的腿部不適。",
+      "【枕頭高度調整】側睡時枕頭高度應等於肩寬，讓頸椎維持直線。仰睡時枕頭不需要太高，只要能撐住頸部弧度就好。"
+    ],
+    caution: "如果睡眠問題已持續超過一個月、伴隨早醒或完全無法入睡，建議同時諮詢醫師評估是否有其他因素。"
+  },
+  general: {
+    analysis: "身體整體的緊繃感、姿勢難以維持，通常代表你的核心支撐系統需要重新啟動。身體為了「維持平衡」，會讓某些肌肉長期處於高張力狀態，這就是為什麼你很難真正放鬆。",
+    stretches: [
+      "【站姿靠牆】後腦、肩胛骨、臀部、腳跟都貼牆站立，維持 1 分鐘。讓身體感受「正確位置」是什麼感覺。",
+      "【深蹲靠牆】背靠牆，腳離牆約一步，緩慢下蹲到大腿與地面平行，維持 30 秒。啟動深層核心和髖關節。",
+      "【每小時起身動一動】久坐每 45–60 分鐘站起來走動 2 分鐘，打斷身體的代償模式，比任何拉伸都重要。"
+    ],
+    caution: "如果你長期覺得「身體不是自己的」或無論怎麼動都不舒服，這通常代表全身代償已經很深，需要系統性調整，不是靠拉伸就能解決的。"
+  }
+};
+
 const answers = {};
 let checkedCount = 0;
 const total = 22;
@@ -206,51 +248,55 @@ function updateName() {
   if (line) line.textContent = name ? `${name}，想了解更多或預約調整` : "想了解更多或預約調整";
 }
 
-function getCheckedQuestions() {
-  const result = [];
-  sections.forEach((sec, si) => {
-    const checked = sec.questions.filter((q, qi) => answers[`${si}-${qi}`]);
-    if (checked.length > 0) result.push({ area: sec.title, questions: checked });
-  });
-  return result;
+function getSectionCounts() {
+  return sections.map((sec, si) => ({
+    key: sec.key,
+    title: sec.title,
+    count: sec.questions.filter((_, qi) => answers[`${si}-${qi}`]).length,
+    total: sec.questions.length
+  }));
 }
 
-async function getAISuggestion(checkedItems, level, n) {
-  const detail = checkedItems.map(item => `【${item.area}】${item.questions.join("、")}`).join("\n");
-  const prompt = `你是台灣專業推拿師 Sian，專精林兩傳手法，了解身體保護張力與結構代償的概念。
+function generateAdvice(sectionCounts) {
+  const active = sectionCounts.filter(s => s.count > 0).sort((a, b) => (b.count/b.total) - (a.count/a.total));
+  if (active.length === 0) return "<p style='font-size:14px;color:#666'>請先勾選症狀再查看建議。</p>";
 
-這位使用者完成了身體張力自我檢測，勾選了以下症狀（共 ${n} 項，等級：${level}）：
+  let html = "";
 
-${detail}
-
-請根據以上具體症狀，用繁體中文提供：
-
-1. **身體狀態分析**（2-3句，說明這些症狀背後可能的身體邏輯，用林兩傳「身體保護張力」的概念解釋）
-
-2. **日常放鬆建議**（3個具體動作或習慣，每個用一句話說明怎麼做）
-
-3. **需要注意的事**（1-2句，說明什麼狀況建議盡快尋求調整）
-
-語氣親切專業，像推拿師在跟客人說話。不要用 markdown 格式，直接用換行分段即可。`;
-
-  try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1000,
-        messages: [{ role: "user", content: prompt }]
-      })
-    });
-    const data = await response.json();
-    return data.content?.[0]?.text || "無法取得建議，請直接聯繫 Sian。";
-  } catch (e) {
-    return "網路連線問題，建議直接加入 LINE 詢問 Sian。";
+  // 分析
+  const analyses = active.map(s => areaAdvice[s.key].analysis);
+  html += `<div class="ai-section"><div class="ai-section-title">📋 身體狀態分析</div><div class="ai-section-content">`;
+  if (active.length === 1) {
+    html += analyses[0];
+  } else {
+    html += `你目前主要有 ${active.map(s => s.title).join("、")} 的問題。${analyses[0]} 這些區域的問題往往互相影響，需要從整體來看。`;
   }
+  html += `</div></div>`;
+
+  // 放鬆動作：取前兩個最嚴重區塊各1個動作，再加一個整體動作
+  html += `<div class="ai-section"><div class="ai-section-title">🧘 建議放鬆動作</div><div class="ai-section-content">`;
+  const moves = [];
+  active.slice(0, 2).forEach(s => {
+    const advice = areaAdvice[s.key];
+    const idx = Math.min(s.count - 1, advice.stretches.length - 1);
+    moves.push(advice.stretches[idx]);
+  });
+  if (active.length >= 3 || (active.length >= 1 && active[0].key === "general")) {
+    moves.push(areaAdvice["general"].stretches[2]);
+  } else if (moves.length < 3) {
+    const first = areaAdvice[active[0].key];
+    if (first.stretches[1] && !moves.includes(first.stretches[1])) moves.push(first.stretches[1]);
+  }
+  html += moves.slice(0, 3).map((m, i) => `<p style="margin-bottom:8px">${i+1}. ${m}</p>`).join("");
+  html += `</div></div>`;
+
+  // 注意事項：取最嚴重區塊的
+  html += `<div class="ai-section"><div class="ai-section-title">⚠️ 需要注意的事</div><div class="ai-section-content">${areaAdvice[active[0].key].caution}</div></div>`;
+
+  return html;
 }
 
-async function showResult() {
+function showResult() {
   const n = checkedCount;
   if (n === 0) { alert("請至少勾選一項症狀"); return; }
 
@@ -280,7 +326,9 @@ async function showResult() {
   document.getElementById("result-desc").textContent = desc;
   document.getElementById("result-suggest").textContent = suggest;
   document.getElementById("result-box").style.borderLeftColor = color;
-  document.getElementById("ai-content").innerHTML = `<div class="ai-loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span>正在為你分析身體狀態...</span></div>`;
+
+  const sectionCounts = getSectionCounts();
+  document.getElementById("ai-content").innerHTML = generateAdvice(sectionCounts);
 
   const el = document.getElementById("result");
   el.classList.add("show");
@@ -292,10 +340,6 @@ async function showResult() {
   const msg = `你好，${nameText}我剛做完身體張力自我檢測，結果是「${level}」（勾選了 ${n} 項）。想進一步了解我的狀況，請問方便諮詢嗎？`;
   document.getElementById("line-btn").href = `https://line.me/R/oaMessage/@413mwndv/?${encodeURIComponent(msg)}`;
   document.getElementById("line-btn").style.display = "block";
-
-  const checkedItems = getCheckedQuestions();
-  const aiText = await getAISuggestion(checkedItems, level, n);
-  document.getElementById("ai-content").textContent = aiText;
 }
 
 render();
